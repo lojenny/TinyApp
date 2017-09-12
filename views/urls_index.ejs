@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+    <%- include ./partials/_header %>
+<body>
+    <table>
+    <% for(var key in urls) { %>
+        <tr><td><%= key %></td><td><%= urls[key] %></td></tr>
+    <% } %>
+    </table>
+    <a href="https://www.w3schools.com/html/">New URL!</a>   
+</body>
+</html>
