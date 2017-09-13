@@ -2,11 +2,20 @@
 <html lang="en">
     <%- include ./partials/_header %>
 <body>
-    <table>
-    <% for(var key in urls) { %>
-        <tr><td><%= key %></td><td><%= urls[key] %></td></tr>
+    <ul>
+    <li> <% for(var key in urls) { %>
+    <%= key %>
+    <%= urls[key] %>
+    <form method="POST" action="/urls/<%=key%>/delete" style="margin:10px;">
+        <button type='submit'>DELETE</button>
+    <form method="POST" action="" style="margin:10px;">
+        <button type='submit'>UPDATE</button>
+    </li> 
+    </form> 
     <% } %>
-    </table>
-    <a href="/urls/new">New URL!</a>   
+
+    </ul>
+    <a href="/urls/new">Make new Short URL</a>  
 </body>
+
 </html>
