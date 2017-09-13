@@ -24,6 +24,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL]=req.body.longURL;
@@ -31,8 +32,13 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
+  if (urlDatabase[req.params.shortURL] === undefined){
+    res.redirect(404, "/urls/new"); //redirect to an error page with status code//
+  }else {
   let longURL = urlDatabase[req.params.shortURL];
+  res.status(302)
   res.redirect(longURL);
+  }
 });
 
 app.get("/urls", (req, res) => {
@@ -41,11 +47,15 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (urlDatabase[req.params.id] === undefined){
+    res.redirect(404, "/urls/new"); //redirect to an error page with status code//
+  }else {  
   let templateVars = { 
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
   };
   res.render("urls_show", templateVars);
+  }
 });
 
 app.get("/", (req, res) => {
