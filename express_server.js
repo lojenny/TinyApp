@@ -23,7 +23,10 @@ function generateRandomString() {
 
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -47,7 +50,10 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { 
+    username: req.cookies["username"],  
+    urls: urlDatabase
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -55,7 +61,8 @@ app.get("/urls/:id", (req, res) => {
   if (urlDatabase[req.params.id] === undefined){
     res.redirect(404, "/urls/new"); //redirect to an error page with status code//
   }else {  
-  let templateVars = { 
+  let templateVars = {
+    username: req.cookies["username"], 
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
   };
@@ -79,6 +86,12 @@ app.post("/urls/:id", (req, res) => {
 app.post("/login", (req, res) => {
   let user = req.body.username;
   res.cookie('username',user);
+  res.redirect('/urls');
+});
+
+app.post("/logout", (req, res) => {
+  let user = req.body.username;
+  res.clearCookie('username',user);
   res.redirect('/urls');
 });
 

@@ -2,9 +2,15 @@
     <title>TinyApp</title>
 </head>
 
- <form method="POST" action="/login" style="margin:10px;">
-    <label for = "username">name:</label>
-    <input id ="username" type="text" name="username" value="username" placeholder= "Enter a login name.">
-    <button type='submit'>Sign In</button>
-</form> 
-    
+<% if (username !== undefined) { %>
+    <p> Logged in as <%=username%>
+    <form method="POST" action="/logout" style="margin:10px;">
+        <button type='submit'>Log Out</button></p>
+    </form>
+<% } else { %>
+    <form method="POST" action="/login" style="margin:10px;">
+        <label for = "username">name:</label>
+        <input id ="username" type="text" name="username" placeholder= "Enter a login name.">
+        <button type='submit'>Sign In</button>
+    </form> 
+<% } %>
