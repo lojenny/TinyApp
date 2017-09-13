@@ -4,12 +4,12 @@
 <body>
     <ul>
     <li> <% for(var key in urls) { %>
-    <%= key %>
-    <%= urls[key] %>
+    <%= key %> -->
+    <a href=<%= urls[key] %>><%= urls[key] %></a>  
     <form method="POST" action="/urls/<%=key%>/delete" style="margin:10px;">
         <button type='submit'>DELETE</button>
-    <form method="POST" action="" style="margin:10px;">
-        <button type='submit'>UPDATE</button>
+    <form method="POST" action="urls/<%=key%>" style="margin:10px;">
+        <a href="/urls/<%= key %>">Edit</a>  
     </li> 
     </form> 
     <% } %>
