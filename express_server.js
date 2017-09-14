@@ -39,6 +39,21 @@ function generateRandomString() {
   return text;
   };
 
+function findbyEmail(email){
+  for (let user in users){
+    if (users[user].email === email){
+      return users[user];
+    }
+  }
+}
+
+function findbyID(id){
+  for (let user in users){
+    if (users[user].id === id){
+      return users[user];
+    }
+  }
+}
 
 app.get("/urls/new", (req, res) => {
   let templateVars = {
@@ -69,9 +84,10 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls", (req, res) => {
   let templateVars = { 
-    username: req.cookies["username"],  
+    user: users[req.cookies["user_id"]],  
     urls: urlDatabase
   };
+  
   res.render("urls_index", templateVars);
 });
 
@@ -102,8 +118,8 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  let user = req.body.username;
-  res.cookie('username',user);
+  let user = req.body.user_id;
+  res.cookie('user_id',user);
   res.redirect('/urls');
 });
 
@@ -115,26 +131,64 @@ app.post("/logout", (req, res) => {
 
 app.get("/register", (req, res) => {
   let templateVars = { 
-    username: req.cookies["username"],  
+    user: users[req.cookies['user_id']],  
     urls: urlDatabase
   };
   res.render("urls_register", templateVars);
 });
 
+function  validateUser(email, password, id) {
+  return !email || !password || !findbyEmail(email) || !findbyID(id);
+}
+
+// function generateId() {
+
+//   let id = generateRandomString();
+
+//   if (findbyID(id)) {
+//     generateId();
+//   }
+
+//   return id;
+// }
+
 app.post("/register", (req, res) => {
-  let userEmail = req.body.email;
-  let userPassword = req.body.password;
-  let randID = generateRandomString();
-  users[randID] = {
-    id: randID,
-    email: userEmail,
-    password: userPassword,
+  let email = req.body.email;
+  let password = req.body.password;
+  let id = generateRandomString();
+
+  
+    
+  if (!validateUser(email, password, id)) {
+    res.status(400);
+    res.send("400: Bad Request");
+    return;
+  } 
+
+  // if (!userPassword){
+  //   res.status(400);
+  //   res.send("400: Bad Request");
+  //   return;
+  // }
+  // if (!findbyEmail(userEmail, users)){
+  //   res.status(400);
+  //   res.send("400: Bad Request");
+  //   return;
+  // }
+  // if (!findbyID(userID, users)){
+  //   res.status(400);
+  //   res.send("400: Bad Request");
+  //   return;
+  // }
+  users[id] = {
+    id: id,
+    email: email,
+    password: password
   }
-  console.log(users);
-  res.cookie('user_id',users[randID]);
+
+  res.cookie('user_id', id);
   res.redirect('/urls');
 });
-
 
 // app.get("/", (req, res) => {
 //   res.end("Hello!");

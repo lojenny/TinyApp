@@ -2,15 +2,15 @@
     <title>TinyApp</title>
 </head>
 
-<% if (username !== undefined) { %>
-    <p> Logged in as <%=username%>
+<% if (user) { %>
+    <p> Logged in as <%=user.email%>
     <form method="POST" action="/logout" style="margin:10px;">
         <button type='submit'>Log Out</button></p>
     </form>
 <% } else { %>
     <form method="POST" action="/login" style="margin:10px;">
-        <label for = "username">name:</label>
-        <input id ="username" type="text" name="username" placeholder= "Enter a login name.">
+        <label for = "user_id">name:</label>
+        <input id ="user_id" type="text" name="user_id" placeholder= "Enter a login ID.">
         <button type='submit'>Sign In</button>
     </form> 
 <% } %>
