@@ -9,6 +9,24 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  },
+  "user3RandomID": {
+    id: "user3RandomID", 
+    email: "user3@example.com", 
+    password: "junkfood-junkie"
+  }
+}
+
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -94,6 +112,29 @@ app.post("/logout", (req, res) => {
   res.clearCookie('username',user);
   res.redirect('/urls');
 });
+
+app.get("/register", (req, res) => {
+  let templateVars = { 
+    username: req.cookies["username"],  
+    urls: urlDatabase
+  };
+  res.render("urls_register", templateVars);
+});
+
+app.post("/register", (req, res) => {
+  let userEmail = req.body.email;
+  let userPassword = req.body.password;
+  let randID = generateRandomString();
+  users[randID] = {
+    id: randID,
+    email: userEmail,
+    password: userPassword,
+  }
+  console.log(users);
+  res.cookie('user_id',users[randID]);
+  res.redirect('/urls');
+});
+
 
 // app.get("/", (req, res) => {
 //   res.end("Hello!");
