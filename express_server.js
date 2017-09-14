@@ -13,17 +13,17 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "1234"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: "1234"
   },
   "user3RandomID": {
     id: "user3RandomID", 
     email: "user3@example.com", 
-    password: "junkfood-junkie"
+    password: "1234"
   }
 }
 
@@ -39,25 +39,10 @@ function generateRandomString() {
   return text;
   };
 
-function findbyEmail(email){
-  for (let user in users){
-    if (users[user].email === email){
-      return users[user];
-    }
-  }
-}
-
-function findbyID(id){
-  for (let user in users){
-    if (users[user].id === id){
-      return users[user];
-    }
-  }
-}
 
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    user: users[req.cookies['user_id']],  
   };
   res.render("urls_new", templateVars);
 });
@@ -87,7 +72,6 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies["user_id"]],  
     urls: urlDatabase
   };
-  
   res.render("urls_index", templateVars);
 });
 
@@ -96,7 +80,7 @@ app.get("/urls/:id", (req, res) => {
     res.redirect(404, "/urls/new"); //redirect to an error page with status code//
   }else {  
   let templateVars = {
-    username: req.cookies["username"], 
+    user: users[req.cookies['user_id']],  
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
   };
@@ -117,15 +101,22 @@ app.post("/urls/:id", (req, res) => {
   res.redirect('/urls');
 });
 
+
 app.post("/login", (req, res) => {
-  let user = req.body.user_id;
-  res.cookie('user_id',user);
+  let user = findUser(req.body.email, req.body.password);
+  if (user === undefined) {
+    res.status(403);
+    res.send("403: Forbidden");
+    return;
+  } 
+  res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
 
+
 app.post("/logout", (req, res) => {
-  let user = req.body.username;
-  res.clearCookie('username',user);
+  let user = findUser(req.body.email, req.body.password);
+  res.clearCookie('user_id', user);
   res.redirect('/urls');
 });
 
@@ -137,57 +128,63 @@ app.get("/register", (req, res) => {
   res.render("urls_register", templateVars);
 });
 
-function  validateUser(email, password, id) {
-  return !email || !password || !findbyEmail(email) || !findbyID(id);
+// validation functions
+function findUser(email, password) {
+  for (let user in users) {
+    if (users[user].email === email && users[user].password === password){
+      return users[user];
+    }else {
+      return undefined;
+    }
+  }
 }
 
-// function generateId() {
-
-//   let id = generateRandomString();
-
-//   if (findbyID(id)) {
-//     generateId();
-//   }
-
-//   return id;
+// function  validateUser(email, password) {
+//   return !email || !password || !findbyEmail(email) || !findbyPassword(password);
 // }
+
+// function findbyEmail(email){
+//   for (let user in users){
+//     if (users[user].email === email){
+//       return users[user];
+//     }
+//   }
+// }
+
+// function findbyPassword(password){
+//   for (let user in users){
+//     if (users[user].password === password){
+//       return users[user];
+//     }
+//   }
+// }
+//valicating functions
 
 app.post("/register", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
   let id = generateRandomString();
 
-  
-    
-  if (!validateUser(email, password, id)) {
+  if (findUser(email, password, id)) {
     res.status(400);
     res.send("400: Bad Request");
     return;
   } 
-
-  // if (!userPassword){
-  //   res.status(400);
-  //   res.send("400: Bad Request");
-  //   return;
-  // }
-  // if (!findbyEmail(userEmail, users)){
-  //   res.status(400);
-  //   res.send("400: Bad Request");
-  //   return;
-  // }
-  // if (!findbyID(userID, users)){
-  //   res.status(400);
-  //   res.send("400: Bad Request");
-  //   return;
-  // }
   users[id] = {
     id: id,
     email: email,
     password: password
   }
-
+  console.log(users);
   res.cookie('user_id', id);
   res.redirect('/urls');
+});
+
+app.get("/login", (req, res) => {
+  let templateVars = {
+    user: users[req.cookies['user_id']],  
+  };
+  res.render("urls_login", templateVars);
 });
 
 // app.get("/", (req, res) => {
@@ -201,6 +198,17 @@ app.post("/register", (req, res) => {
 // app.get("/hello", (req, res) => {
 //   res.end("<html><body>Hello <b>World</b></body></html>\n");
 // });
+
+// function generateId() {
+
+//   let id = generateRandomString();
+
+//   if (findbyID(id)) {
+//     generateId();
+//   }
+
+//   return id;
+// }
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
