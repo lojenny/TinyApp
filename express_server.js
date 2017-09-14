@@ -39,11 +39,22 @@ function generateRandomString() {
   return text;
   };
 
+function findUser(email, password) {
+  for (let user in users) {
+    if (users[user].email === email && users[user].password === password){
+      return users[user];
+    }
+  }
+}
 
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     user: users[req.cookies['user_id']],  
   };
+  if (templateVars.user === undefined){
+    // res.status(403)
+    // res.render("login", {error: "error message"});
+  }
   res.render("urls_new", templateVars);
 });
 
@@ -103,7 +114,9 @@ app.post("/urls/:id", (req, res) => {
 
 
 app.post("/login", (req, res) => {
+  console.log(req.body.email, req.body.password);
   let user = findUser(req.body.email, req.body.password);
+  // console.log(user);
   if (user === undefined) {
     res.status(403);
     res.send("403: Forbidden");
@@ -115,8 +128,7 @@ app.post("/login", (req, res) => {
 
 
 app.post("/logout", (req, res) => {
-  let user = findUser(req.body.email, req.body.password);
-  res.clearCookie('user_id', user);
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
@@ -129,15 +141,7 @@ app.get("/register", (req, res) => {
 });
 
 // validation functions
-function findUser(email, password) {
-  for (let user in users) {
-    if (users[user].email === email && users[user].password === password){
-      return users[user];
-    }else {
-      return undefined;
-    }
-  }
-}
+
 
 // function  validateUser(email, password) {
 //   return !email || !password || !findbyEmail(email) || !findbyPassword(password);
@@ -175,7 +179,7 @@ app.post("/register", (req, res) => {
     email: email,
     password: password
   }
-  console.log(users);
+
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
