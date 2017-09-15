@@ -2,8 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require("body-parser"); //middleware
-const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session');
 
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"},
@@ -31,7 +31,10 @@ const users = {
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["banana"]
+}));
 
 function generateRandomString() {
   let text = "";
@@ -61,7 +64,7 @@ function urlsForUser(id){
 
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    user: users[req.cookies['user_id']],  
+    user: users[req.session.user_id],  
   };
   if (templateVars.user === undefined){
     res.status(403);
@@ -83,7 +86,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  let user = users[req.cookies["user_id"]];
+  let user = users[req.session.user_id];
   let shortURL = generateRandomString();
   while (urlDatabase[shortURL] !== undefined){ 
     shortURL = generateRandomString();
@@ -95,7 +98,7 @@ app.post("/urls", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (!user){
     res.redirect(403, "/login");
     return;
@@ -109,7 +112,7 @@ app.get("/urls", (req, res) => {
 
 
 app.get("/urls/:id", (req, res) => {
-  const user = users[req.cookies['user_id']];
+  const user = users[req.session.user_id];
   if (user.id !== urlDatabase[req.params.id].userID){
     res.redirect(403, "/login");
     return;
@@ -118,7 +121,7 @@ app.get("/urls/:id", (req, res) => {
     res.redirect(404, "/urls/new"); //redirect to an error page with status code//
   }else {  
   let templateVars = {
-    user: users[req.cookies['user_id']],  
+    user: users[req.session.user_id],  
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
   };
@@ -128,7 +131,7 @@ app.get("/urls/:id", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   let currKey = req.params.id;
-  let user = users[req.cookies["user_id"]];
+  let user = users[req.session.user_id];
   if (user.id !== urlDatabase[currKey].userID){
     res.send("403: Forbidden");
     return;
@@ -141,9 +144,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   let currKey = req.params.id;
   let newlongURL = req.body.longURL;
-  let user = users[req.cookies["user_id"]];
-  console.log(urlDatabase[currKey].userID);
-  console.log(user.id);
+  let user = users[req.session.user_id];
   if (user.id !== urlDatabase[currKey].userID){
     res.send("403: Forbidden");
     return;
@@ -160,19 +161,19 @@ app.post("/login", (req, res) => {
     res.send("403: Forbidden");
     return;
   } 
-  res.cookie('user_id', user.id);
+  req.session.user_id = user.id;
   res.redirect('/urls');
 });
 
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
 app.get("/register", (req, res) => {
   let templateVars = { 
-    user: users[req.cookies['user_id']],  
+    user: users[req.session.user_id],  
     urls: urlDatabase
   };
   res.render("urls_register", templateVars);
@@ -193,14 +194,13 @@ app.post("/register", (req, res) => {
     email: email,
     password: password
   }
-  console.log(users[id].password);
-  res.cookie('user_id', id);
+  req.session.user_id = id;
   res.redirect('/urls');
 });
 
 app.get("/login", (req, res) => {
   let templateVars = {
-    user: users[req.cookies['user_id']],  
+    user: users[req.session.user_id],  
   };
   res.render("urls_login", templateVars);
 });
