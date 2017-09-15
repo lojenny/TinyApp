@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <%- include ./partials/_header %>
-<% if (user) { %>
-    <p> Logged in as <%=user.email%>
-    <form method="POST" action="/logout" style="margin:10px;">
-        <button type='submit'>Log Out</button></p>
+  <% if (user) { %>
+    <p> Logged in as
+      <%=user.email%>
+        <form method="POST" action="/logout" style="margin:10px;">
+          <button type='submit'>Log Out</button></p>
     </form>
-<% } else { %>
+    <% } else { %>
+
       <body style="font-size:20px; padding:20px;">
         <form action="/login" method="POST" style="margin:30px;">
           <p>
             <label for="email">Email:</label>
-          <input id="email" type="email" name="email" placeholder="example@google.com" style="width: 300px">
+            <input id="email" type="email" name="email" placeholder="example@google.com" style="width: 300px">
           </p>
           <p>
             <label for="password">Password:</label>
             <input id="password" type="password" name="password" placeholder="********" style="width: 300px">
             <button type="submit">Submit</button>
           </p>
-          </form>
+        </form>
       </body>
-    </html>
+
+</html>
 <% } %>
