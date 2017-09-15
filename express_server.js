@@ -33,9 +33,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 function generateRandomString() {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (var i = 0; i < 6; i++)
+  let text = "";
+  let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 6; i++)
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   return text;
   };
@@ -46,6 +46,16 @@ function findUser(email, password) {
       return users[user];
     }
   }
+}
+
+function urlsForUser(id){
+  const urls = {};
+  for (let shortURL in urlDatabase){
+    if (urlDatabase[shortURL].userID === id){
+      urls[shortURL]=urlDatabase[shortURL];
+    }
+  }
+  return urls;
 }
 
 app.get("/urls/new", (req, res) => {
@@ -65,7 +75,7 @@ app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL] === undefined){
     res.redirect(404, "/urls/new"); 
   }else {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.status(302)
   res.redirect(longURL);
   }
@@ -84,21 +94,34 @@ app.post("/urls", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  let templateVars = { 
-    user: users[req.cookies["user_id"]],  
-    urls: urlDatabase
+  const user = users[req.cookies["user_id"]];
+  if (!user){
+    res.redirect(403, "/login");
+    return;
+  }
+  let templateVars = {
+    user: user,
+    urls: urlsForUser(user.id)
   };
   res.render("urls_index", templateVars);
 });
 
+
 app.get("/urls/:id", (req, res) => {
+  const user = users[req.cookies['user_id']];
+  console.log(urlDatabase[req.params.id]);
+  console.log(user);
+  if (user.id !== urlDatabase[req.params.id].userID){
+    res.redirect(403, "/login");
+    return;
+  }
   if (urlDatabase[req.params.id] === undefined){
     res.redirect(404, "/urls/new"); //redirect to an error page with status code//
   }else {  
   let templateVars = {
     user: users[req.cookies['user_id']],  
     shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
   };
   res.render("urls_show", templateVars);
   }
