@@ -62,15 +62,23 @@ function urlsForUser(id){
   return urls;
 }
 
+app.get("/", (req, res) => {
+  const user = users[req.session.user_id];
+  if (!user){
+    res.redirect(403, "/login");
+    return;
+  }
+  res.redirect("/urls");
+});
+
+
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id],  
   };
   if (templateVars.user === undefined){
     res.status(403);
-    res.redirect(403, "/login");
-    // res.render("urls_login");
-    // res.render("login", {error: "error message"});
+    res.redirect("/login");
   }
   res.render("urls_new", templateVars);
 });
@@ -88,6 +96,9 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   let user = users[req.session.user_id];
   let shortURL = generateRandomString();
+  if (!user){
+    res.render("error_401");
+  }
   while (urlDatabase[shortURL] !== undefined){ 
     shortURL = generateRandomString();
   }
@@ -100,8 +111,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
   if (!user){
-    res.redirect(403, "/login");
-    return;
+    res.render("error_401");
   }
   let templateVars = {
     user: user,
@@ -113,13 +123,15 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
-  if (user.id !== urlDatabase[req.params.id].userID){
-    res.redirect(403, "/login");
-    return;
+  if (!user){
+    res.render("error_401");
   }
   if (urlDatabase[req.params.id] === undefined){
-    res.redirect(404, "/urls/new"); //redirect to an error page with status code//
-  }else {  
+    res.render("error_404"); 
+  }
+  if (user.id !== urlDatabase[req.params.id].userID){
+    res.render("error_403");
+  } else {  
   let templateVars = {
     user: users[req.session.user_id],  
     shortURL: req.params.id,
@@ -158,7 +170,7 @@ app.post("/login", (req, res) => {
   let user = findUser(req.body.email, req.body.password);
   if (user === undefined) {
     res.status(403);
-    res.send("403: Forbidden");
+    res.render("error_401");
     return;
   } 
   req.session.user_id = user.id;
@@ -168,10 +180,14 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.get("/register", (req, res) => {
+  let user = users[req.session.user_id];
+  if (user){
+    res.redirect("/urls");
+  }
   let templateVars = { 
     user: users[req.session.user_id],  
     urls: urlDatabase
@@ -183,12 +199,14 @@ app.post("/register", (req, res) => {
   let email = req.body.email;
   let password = bcrypt.hashSync(req.body.password, 10);
   let id = generateRandomString();
-
-  if (findUser(email, password, id)) {
-    res.status(400);
-    res.send("400: Bad Request");
-    return;
-  } 
+  if (!email || !password){
+    res.render("error_406");
+  }
+  for (user in users){
+    if (users[user].email === email){
+      res.render("error_400");
+    }
+  }
   users[id] = {
     id: id,
     email: email,
@@ -198,35 +216,18 @@ app.post("/register", (req, res) => {
   res.redirect('/urls');
 });
 
+
 app.get("/login", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id],  
   };
+  let user = users[req.session.user_id];
+  if (user){
+    res.redirect("/urls");
+  }
   res.render("urls_login", templateVars);
 });
 
-// app.get("/", (req, res) => {
-//   res.end("Hello!");
-// });
-
-// app.get("/urls.json", (req, res) => {
-//     res.json(urlDatabase);
-//   });
-
-// app.get("/hello", (req, res) => {
-//   res.end("<html><body>Hello <b>World</b></body></html>\n");
-// });
-
-// function generateId() {
-
-//   let id = generateRandomString();
-
-//   if (findbyID(id)) {
-//     generateId();
-//   }
-
-//   return id;
-// }
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

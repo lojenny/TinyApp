@@ -10,5 +10,8 @@
     <input id="longURL" type="text" name="longURL" value="<%=longURL%>" style="width: 300px">
     <button type="submit">UPDATE</button>
     </form>
+    <form method="POST" action="/urls/<%=shortURL%>/delete" style="margin:10px;">
+        <button type='submit'>DELETE</button>
+    </form>
 </body>
 </html>
