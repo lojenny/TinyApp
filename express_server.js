@@ -3,6 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require("body-parser"); //middleware
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"},
@@ -14,17 +15,17 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "1234"
+    password: bcrypt.hashSync("1234", 10)
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "1234"
+    password: bcrypt.hashSync("1234", 10)
   },
   "user3RandomID": {
     id: "user3RandomID", 
     email: "user3@example.com", 
-    password: "1234"
+    password: bcrypt.hashSync("1234", 10)
   }
 }
 
@@ -42,7 +43,7 @@ function generateRandomString() {
 
 function findUser(email, password) {
   for (let user in users) {
-    if (users[user].email === email && users[user].password === password){
+    if (users[user].email === email && bcrypt.compareSync(password, users[user].password)){
       return users[user];
     }
   }
@@ -109,8 +110,6 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies['user_id']];
-  console.log(urlDatabase[req.params.id]);
-  console.log(user);
   if (user.id !== urlDatabase[req.params.id].userID){
     res.redirect(403, "/login");
     return;
@@ -179,33 +178,9 @@ app.get("/register", (req, res) => {
   res.render("urls_register", templateVars);
 });
 
-// validation functions
-
-
-// function  validateUser(email, password) {
-//   return !email || !password || !findbyEmail(email) || !findbyPassword(password);
-// }
-
-// function findbyEmail(email){
-//   for (let user in users){
-//     if (users[user].email === email){
-//       return users[user];
-//     }
-//   }
-// }
-
-// function findbyPassword(password){
-//   for (let user in users){
-//     if (users[user].password === password){
-//       return users[user];
-//     }
-//   }
-// }
-//valicating functions
-
 app.post("/register", (req, res) => {
   let email = req.body.email;
-  let password = req.body.password;
+  let password = bcrypt.hashSync(req.body.password, 10);
   let id = generateRandomString();
 
   if (findUser(email, password, id)) {
@@ -218,7 +193,7 @@ app.post("/register", (req, res) => {
     email: email,
     password: password
   }
-
+  console.log(users[id].password);
   res.cookie('user_id', id);
   res.redirect('/urls');
 });
