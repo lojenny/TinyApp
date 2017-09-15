@@ -5,8 +5,9 @@ const bodyParser = require("body-parser"); //middleware
 const cookieParser = require('cookie-parser');
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"},
+  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID"},
+  "b2b2b2": { longURL: "https://http.cat/", userID: "user3RandomID"}
 };
 
 const users = { 
@@ -52,7 +53,9 @@ app.get("/urls/new", (req, res) => {
     user: users[req.cookies['user_id']],  
   };
   if (templateVars.user === undefined){
-    // res.status(403)
+    res.status(403);
+    res.redirect(403, "/login");
+    // res.render("urls_login");
     // res.render("login", {error: "error message"});
   }
   res.render("urls_new", templateVars);
@@ -69,14 +72,16 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  let user = users[req.cookies["user_id"]];
   let shortURL = generateRandomString();
   while (urlDatabase[shortURL] !== undefined){ 
     shortURL = generateRandomString();
   }
-  urlDatabase[shortURL]=req.body.longURL; //add to short and long URL key pair to database
+  urlDatabase[shortURL]= { longURL: req.body.longURL, userID: user.id};
   res.status(302);
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
+
 
 app.get("/urls", (req, res) => {
   let templateVars = { 
@@ -101,22 +106,33 @@ app.get("/urls/:id", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   let currKey = req.params.id;
+  let user = users[req.cookies["user_id"]];
+  if (user.id !== urlDatabase[currKey].userID){
+    res.send("403: Forbidden");
+    return;
+  }
   delete urlDatabase[currKey]; //add to short and long URL key pair to database
   res.redirect('/urls');
 });
 
+
 app.post("/urls/:id", (req, res) => {
   let currKey = req.params.id;
   let newlongURL = req.body.longURL;
-  urlDatabase[currKey]= newlongURL;
+  let user = users[req.cookies["user_id"]];
+  console.log(urlDatabase[currKey].userID);
+  console.log(user.id);
+  if (user.id !== urlDatabase[currKey].userID){
+    res.send("403: Forbidden");
+    return;
+  }
+  urlDatabase[currKey].longURL= newlongURL;
   res.redirect('/urls');
 });
 
 
 app.post("/login", (req, res) => {
-  console.log(req.body.email, req.body.password);
   let user = findUser(req.body.email, req.body.password);
-  // console.log(user);
   if (user === undefined) {
     res.status(403);
     res.send("403: Forbidden");
