@@ -36,6 +36,7 @@ app.use(cookieSession({
   keys: ["banana"]
 }));
 
+/** Generates a random 6 digit string for id and short URL  */
 function generateRandomString() {
   let text = "";
   let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -43,6 +44,7 @@ function generateRandomString() {
   return text;
 }
 
+/** Find the user by comparing the email on the database with what was entered  */
 function findUser(email, password) {
   for (let user in users) {
     if (users[user].email === email && bcrypt.compareSync(password, users[user].password)) {
@@ -51,6 +53,7 @@ function findUser(email, password) {
   }
 }
 
+/** Function to show only the short URL that belongs to the user  */
 function urlsForUser(id) {
   const urls = {};
   for (let shortURL in urlDatabase) {
@@ -61,6 +64,7 @@ function urlsForUser(id) {
   return urls;
 }
 
+/** When going to /, prompts to login and if login is already done, redirects to /urls */
 app.get("/", (req, res) => {
   const user = users[req.session.user_id];
   if (!user) {
@@ -70,7 +74,7 @@ app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
-
+/** Page for making a new short URL, redirects to login if user is not logged in */
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id]
@@ -82,6 +86,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+/** Short URL that can be accessed by anyone and takes you to the long URL page, no logged in required. Redirect to error messages if the short URL does not exist */
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL] === undefined) {
     res.redirect(404, "/urls/new");
@@ -92,6 +97,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
+/** Creates short URL when long URL is posted in and user is logged in */
 app.post("/urls", (req, res) => {
   let user = users[req.session.user_id];
   let shortURL = generateRandomString();
@@ -106,7 +112,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`http://localhost:8080/urls/${shortURL}`);
 });
 
-
+/** Renders urls_index where user can see all their personal short URLs */
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
   if (!user) {
@@ -120,6 +126,7 @@ app.get("/urls", (req, res) => {
 });
 
 
+/** User's personal short URL page where they can delete and edit the short url */
 app.get("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   if (!user) {
@@ -140,6 +147,7 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
+/** Deletes the short URL from database */
 app.post("/urls/:id/delete", (req, res) => {
   let currKey = req.params.id;
   let user = users[req.session.user_id];
@@ -151,7 +159,7 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect('/urls');
 });
 
-
+/** Edit and updates the short URL */
 app.post("/urls/:id", (req, res) => {
   let currKey = req.params.id;
   let newlongURL = req.body.longURL;
@@ -164,7 +172,7 @@ app.post("/urls/:id", (req, res) => {
   res.redirect('/urls');
 });
 
-
+/** Login page for users, prompts for register if user does not exist or redirects to /urls when they are already logged in */
 app.post("/login", (req, res) => {
   let user = findUser(req.body.email, req.body.password);
   if (user === undefined) {
@@ -177,11 +185,13 @@ app.post("/login", (req, res) => {
 });
 
 
+/** Log out function, deletes the cookie session and redirect to login page */
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect('/login');
 });
 
+/** Registration page for new users */
 app.get("/register", (req, res) => {
   let user = users[req.session.user_id];
   if (user) {
@@ -194,6 +204,7 @@ app.get("/register", (req, res) => {
   res.render("urls_register", templateVars);
 });
 
+/** Registers the new user to the database with bcrypt and hashed password*/
 app.post("/register", (req, res) => {
   let email = req.body.email;
   let password = bcrypt.hashSync(req.body.password, 10);
@@ -215,7 +226,7 @@ app.post("/register", (req, res) => {
   res.redirect('/urls');
 });
 
-
+/** Login page for exising users */
 app.get("/login", (req, res) => {
   let templateVars = {
     user: users[req.session.user_id]
